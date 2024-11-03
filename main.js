@@ -55,11 +55,62 @@ function render() {
 }
 
 function handlePlayerInput() {
-    // Add code to handle player input
+    canvas.addEventListener('click', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Plant a new plant at the clicked position
+        const plant = {
+            x: x,
+            y: y,
+            type: Math.floor(Math.random() * plantImages.length)
+        };
+        plants.push(plant);
+
+        // Shoot a bullet from the plant
+        const bullet = {
+            x: plant.x + 20,
+            y: plant.y,
+            width: 5,
+            height: 5,
+            speed: 5
+        };
+        bullets.push(bullet);
+    });
 }
 
 function handleGameLogic() {
-    // Add code to handle game logic
+    // Move zombies
+    zombies.forEach(zombie => {
+        zombie.x -= zombie.speed;
+    });
+
+    // Move bullets
+    bullets.forEach(bullet => {
+        bullet.x += bullet.speed;
+    });
+
+    // Check for collisions between bullets and zombies
+    bullets.forEach((bullet, bulletIndex) => {
+        zombies.forEach((zombie, zombieIndex) => {
+            if (bullet.x < zombie.x + zombie.width &&
+                bullet.x + bullet.width > zombie.x &&
+                bullet.y < zombie.y + zombie.height &&
+                bullet.y + bullet.height > zombie.y) {
+                // Remove the bullet and the zombie
+                bullets.splice(bulletIndex, 1);
+                zombies.splice(zombieIndex, 1);
+            }
+        });
+    });
+
+    // Check for game over condition
+    zombies.forEach(zombie => {
+        if (zombie.x <= 0) {
+            gameOver = true;
+        }
+    });
 }
 
 function handleGameProgress() {
