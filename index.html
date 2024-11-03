@@ -1,19 +1,449 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plants vs Zombies</title>
-    <link rel="stylesheet" href="style.css">
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+
+    .controls {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f0f0f0;
+    }
+
+    .plant-button {
+      margin: 5px;
+      padding: 5px;
+      cursor: pointer;
+    }
+
+    .selected {
+      background: #90EE90;
+    }
+
+    .audio-controls {
+      margin: 10px 0;
+    }
+  </style>
 </head>
+
 <body>
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        <div id="progress-bar-container">
-            <div id="progress-bar"></div>
-        </div>
-        <audio id="game-music" src="assets/8bit-music.mp3" autoplay loop></audio>
-    </div>
-    <script src="main.js"></script>
+  <div class="controls">
+    Sun: <span id="sunCount">50</span>
+    <div id="plantButtons"></div>
+  </div>
+  <div class="audio-controls">
+    <button onclick="toggleMusic()">Toggle Music</button>
+    <input type="range"
+      id="volumeSlider"
+      min="0"
+      max="1"
+      step="0.1"
+      value="0.5"
+      onchange="updateVolume(this.value)">
+  </div>
+  <canvas id="gameCanvas"
+    width="800"
+    height="600"></canvas>
+
+  <script>
+    // Audio setup
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let oscillator = null;
+    let gainNode = null;
+    let isPlaying = false;
+
+    // Simple 8-bit melody (frequencies and durations in seconds)
+    const melody = [
+      { freq: 262, duration: 0.2 }, // C4
+      { freq: 330, duration: 0.2 }, // E4
+      { freq: 392, duration: 0.2 }, // G4
+      { freq: 523, duration: 0.4 }, // C5
+      { freq: 392, duration: 0.2 }, // G4
+      { freq: 330, duration: 0.2 }, // E4
+      { freq: 262, duration: 0.4 }, // C4
+    ];
+
+    function playNote(frequency, duration) {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = 'square'; // More "8-bit" sound
+      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+
+      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+
+      return new Promise(resolve => setTimeout(resolve, duration * 1000));
+    }
+
+    async function playMelody() {
+      while (isPlaying) {
+        for (const note of melody) {
+          if (!isPlaying) break;
+          await playNote(note.freq, note.duration);
+        }
+      }
+    }
+
+    function toggleMusic() {
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        audioContext.resume();
+        playMelody();
+      }
+    }
+
+    function updateVolume(value) {
+      if (gainNode) {
+        gainNode.gain.setValueAtTime(value, audioContext.currentTime);
+      }
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const GRID_SIZE = 80;
+    const ROWS = 5;
+    const COLS = 8;
+
+    let sunCount = 50;
+    let selectedPlant = null;
+    let plants = [];
+    let zombies = [];
+    let projectiles = [];
+    let gameLoop;
+    let spawnInterval;
+
+    const plantTypes = {
+      Peashooter: {
+        cost: 100,
+        color: 'green',
+        health: 100,
+        damage: 20,
+        fireRate: 1500,
+        range: Infinity
+      },
+      Sunflower: {
+        cost: 50,
+        color: 'yellow',
+        health: 80,
+        produces: 25,
+        productionRate: 5000
+      },
+      WallNut: {
+        cost: 50,
+        color: 'brown',
+        health: 400
+      },
+      SnowPea: {
+        cost: 175,
+        color: 'lightblue',
+        health: 100,
+        damage: 15,
+        fireRate: 1500,
+        range: Infinity,
+        slow: true
+      },
+      Chomper: {
+        cost: 150,
+        color: 'purple',
+        health: 150,
+        damage: 200,
+        range: 1,
+        eatTime: 3000
+      },
+      Repeater: {
+        cost: 200,
+        color: 'darkgreen',
+        health: 100,
+        damage: 20,
+        fireRate: 1500,
+        shots: 2,
+        range: Infinity
+      },
+      Cactus: {
+        cost: 125,
+        color: 'green',
+        health: 120,
+        damage: 30,
+        fireRate: 2000,
+        range: Infinity
+      },
+      TallNut: {
+        cost: 125,
+        color: 'darkbrown',
+        health: 800
+      },
+      Spikeweed: {
+        cost: 100,
+        color: 'gray',
+        health: 100,
+        damage: 10,
+        fireRate: 1000,
+        range: 1
+      },
+      Starfruit: {
+        cost: 150,
+        color: 'yellow',
+        health: 100,
+        damage: 15,
+        fireRate: 2000,
+        range: Infinity,
+        multiDirection: true
+      }
+    };
+
+    // Initialize plant buttons
+    const plantButtonsDiv = document.getElementById('plantButtons');
+    Object.entries(plantTypes).forEach(([name, data]) => {
+      const button = document.createElement('button');
+      button.textContent = `${name} (${data.cost})`;
+      button.className = 'plant-button';
+      button.onclick = () => selectPlant(name, button);
+      plantButtonsDiv.appendChild(button);
+    });
+
+    function selectPlant(plantName, buttonElement) {
+      document.querySelectorAll('.plant-button').forEach(btn => btn.classList.remove('selected'));
+      if (selectedPlant === plantName) {
+        selectedPlant = null;
+      } else {
+        selectedPlant = plantName;
+        buttonElement.classList.add('selected');
+      }
+    }
+
+    canvas.onclick = (e) => {
+      if (!selectedPlant) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / GRID_SIZE);
+      const y = Math.floor((e.clientY - rect.top) / GRID_SIZE);
+
+      if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
+        const cost = plantTypes[selectedPlant].cost;
+        if (sunCount >= cost && !plants.some(p => p.x === x && p.y === y)) {
+          sunCount -= cost;
+          plants.push({
+            type: selectedPlant,
+            x: x,
+            y: y,
+            health: plantTypes[selectedPlant].health,
+            lastShot: 0,
+            lastProduce: 0,
+            eating: false
+          });
+          updateSunCount();
+        }
+      }
+    };
+
+    function updateSunCount() {
+      document.getElementById('sunCount').textContent = sunCount;
+    }
+
+    function drawGrid() {
+      ctx.strokeStyle = '#ccc';
+      for (let i = 0; i <= COLS; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * GRID_SIZE, 0);
+        ctx.lineTo(i * GRID_SIZE, ROWS * GRID_SIZE);
+        ctx.stroke();
+      }
+      for (let i = 0; i <= ROWS; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * GRID_SIZE);
+        ctx.lineTo(COLS * GRID_SIZE, i * GRID_SIZE);
+        ctx.stroke();
+      }
+    }
+
+    function drawPlants() {
+      plants.forEach(plant => {
+        ctx.fillStyle = plantTypes[plant.type].color;
+        ctx.fillRect(
+          plant.x * GRID_SIZE + 10,
+          plant.y * GRID_SIZE + 10,
+          GRID_SIZE - 20,
+          GRID_SIZE - 20
+        );
+
+        // Health bar
+        const healthPercent = plant.health / plantTypes[plant.type].health;
+        ctx.fillStyle = `rgb(${255 * (1 - healthPercent)}, ${255 * healthPercent}, 0)`;
+        ctx.fillRect(
+          plant.x * GRID_SIZE + 10,
+          plant.y * GRID_SIZE + 5,
+          (GRID_SIZE - 20) * healthPercent,
+          3
+        );
+      });
+    }
+
+    function drawZombies() {
+      zombies.forEach(zombie => {
+        ctx.fillStyle = 'darkred';
+        ctx.fillRect(
+          zombie.x,
+          zombie.y * GRID_SIZE + 10,
+          GRID_SIZE - 20,
+          GRID_SIZE - 20
+        );
+
+        // Health bar
+        const healthPercent = zombie.health / zombie.maxHealth;
+        ctx.fillStyle = `rgb(${255 * (1 - healthPercent)}, ${255 * healthPercent}, 0)`;
+        ctx.fillRect(
+          zombie.x,
+          zombie.y * GRID_SIZE + 5,
+          (GRID_SIZE - 20) * healthPercent,
+          3
+        );
+      });
+    }
+
+    function drawProjectiles() {
+      ctx.fillStyle = 'green';
+      projectiles.forEach(proj => {
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y * GRID_SIZE + GRID_SIZE / 2, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function spawnZombie() {
+      const row = Math.floor(Math.random() * ROWS);
+      zombies.push({
+        x: canvas.width,
+        y: row,
+        health: 100,
+        maxHealth: 100,
+        speed: 0.5,
+        slowed: false
+      });
+    }
+
+    function updateProjectiles() {
+      projectiles.forEach(proj => {
+        proj.x += 5;
+
+        // Check collision with zombies
+        zombies.forEach(zombie => {
+          if (Math.abs(proj.y - zombie.y) < 0.5 &&
+            Math.abs(proj.x - (zombie.x + GRID_SIZE / 2)) < GRID_SIZE / 2) {
+            zombie.health -= proj.damage;
+            if (proj.slow) zombie.slowed = true;
+            proj.remove = true;
+          }
+        });
+      });
+
+      projectiles = projectiles.filter(proj => !proj.remove && proj.x < canvas.width);
+    }
+
+    function updatePlants() {
+      const now = Date.now();
+      plants.forEach(plant => {
+        const type = plantTypes[plant.type];
+
+        if (type.produces && now - plant.lastProduce >= type.productionRate) {
+          sunCount += type.produces;
+          plant.lastProduce = now;
+          updateSunCount();
+        }
+
+        if (type.damage && !plant.eating) {
+          // Check for zombies in range
+          const zombie = zombies.find(z =>
+            Math.abs(z.y - plant.y) < 0.5 &&
+            z.x > plant.x * GRID_SIZE &&
+            z.x < plant.x * GRID_SIZE + type.range * GRID_SIZE
+          );
+
+          if (zombie && now - plant.lastShot >= type.fireRate) {
+            if (type.range === 1) {
+              // Melee plant
+              zombie.health -= type.damage;
+              if (type.eatTime) {
+                plant.eating = true;
+                setTimeout(() => {
+                  plant.eating = false;
+                }, type.eatTime);
+              }
+            } else {
+              // Ranged plant
+              const shots = type.shots || 1;
+              for (let i = 0; i < shots; i++) {
+                projectiles.push({
+                  x: (plant.x + 1) * GRID_SIZE,
+                  y: plant.y,
+                  damage: type.damage,
+                  slow: type.slow
+                });
+              }
+            }
+            plant.lastShot = now;
+          }
+        }
+      });
+    }
+
+    function updateZombies() {
+      zombies.forEach(zombie => {
+        // Move zombie
+        zombie.x -= zombie.slowed ? zombie.speed / 2 : zombie.speed;
+
+        // Check collision with plants
+        plants.forEach(plant => {
+          if (Math.abs(zombie.y - plant.y) < 0.5 &&
+            Math.abs(zombie.x - (plant.x * GRID_SIZE)) < GRID_SIZE / 2) {
+            plant.health -= 0.5;
+          }
+        });
+      });
+
+      // Remove dead zombies
+      zombies = zombies.filter(zombie => zombie.health > 0 && zombie.x > -GRID_SIZE);
+
+      // Remove dead plants
+      plants = plants.filter(plant => plant.health > 0);
+
+      // Check game over
+      if (zombies.some(zombie => zombie.x <= 0)) {
+        clearInterval(gameLoop);
+        clearInterval(spawnInterval);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+        ctx.font = '48px Arial';
+        ctx.fillText('GAME OVER', canvas.width / 2 - 100, canvas.height / 2);
+        isPlaying = false; // Stop the music
+      }
+    }
+
+    function gameUpdate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawGrid();
+      updatePlants();
+      updateZombies();
+      updateProjectiles();
+      drawPlants();
+      drawZombies();
+      drawProjectiles();
+    }
+
+    // Start game
+    gameLoop = setInterval(gameUpdate, 1000 / 30);
+    spawnInterval = setInterval(spawnZombie, 5000);
+  </script>
 </body>
+
 </html>
