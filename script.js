@@ -469,8 +469,8 @@ function showRestartButton() {
   restartButton.id = 'restartButton';
   restartButton.textContent = 'Restart';
   restartButton.style.position = 'absolute';
-  restartButton.style.left = `${(COLS / 2) * GRID_SIZE}px`;
-  restartButton.style.top = `${(ROWS / 2) * GRID_SIZE}px`;
+  restartButton.style.left = '50%';
+  restartButton.style.top = '50%';
   restartButton.style.transform = 'translate(-50%, -50%)';
   restartButton.style.padding = '10px 20px';
   restartButton.style.fontSize = '24px';
