@@ -413,6 +413,7 @@ function updateZombies() {
     ctx.fillStyle = 'white';
     ctx.font = '48px Arial';
     ctx.fillText('GAME OVER', canvas.width / 2 - 100, canvas.height / 2);
+    showRestartButton();
     isPlaying = false;
   }
 }
@@ -434,6 +435,47 @@ function toggleSpeed() {
   clearInterval(spawnInterval);
   gameLoop = setInterval(gameUpdate, 1000 / 30 / gameSpeed);
   spawnInterval = setInterval(spawnZombie, 5000 / gameSpeed);
+}
+
+function restartGame() {
+  currentWave = 1;
+  zombiesInWave = 10;
+  zombiesSpawned = 0;
+  zombiesKilled = 0;
+  sunCount = 50;
+  selectedPlant = null;
+  plants = [];
+  zombies = [];
+  projectiles = [];
+  gameSpeed = 1;
+
+  document.getElementById('sunCount').textContent = sunCount;
+  document.getElementById('waveCounter').textContent = currentWave;
+  document.getElementById('progressBar').style.width = '0%';
+
+  clearInterval(gameLoop);
+  clearInterval(spawnInterval);
+  gameLoop = setInterval(gameUpdate, 1000 / 30);
+  spawnInterval = setInterval(spawnZombie, 5000);
+
+  const restartButton = document.getElementById('restartButton');
+  if (restartButton) {
+    restartButton.remove();
+  }
+}
+
+function showRestartButton() {
+  const restartButton = document.createElement('button');
+  restartButton.id = 'restartButton';
+  restartButton.textContent = 'Restart';
+  restartButton.style.position = 'absolute';
+  restartButton.style.left = '50%';
+  restartButton.style.top = '50%';
+  restartButton.style.transform = 'translate(-50%, -50%)';
+  restartButton.style.padding = '10px 20px';
+  restartButton.style.fontSize = '24px';
+  restartButton.onclick = restartGame;
+  document.body.appendChild(restartButton);
 }
 
 // Start game
