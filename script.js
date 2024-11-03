@@ -32,6 +32,7 @@ let zombies = [];
 let projectiles = [];
 let gameLoop;
 let spawnInterval;
+let gameSpeed = 1;
 
 const plantTypes = {
   Peashooter: {
@@ -228,8 +229,13 @@ function drawZombies() {
 }
 
 function drawProjectiles() {
-  ctx.fillStyle = 'green';
   projectiles.forEach(proj => {
+    const plant = plants.find(p => p.x === Math.floor(proj.x / GRID_SIZE) && p.y === proj.y);
+    if (plant) {
+      ctx.fillStyle = plantTypes[plant.type].color;
+    } else {
+      ctx.fillStyle = 'green';
+    }
     ctx.beginPath();
     ctx.arc(proj.x, proj.y * GRID_SIZE + GRID_SIZE / 2, 5, 0, Math.PI * 2);
     ctx.fill();
@@ -263,7 +269,7 @@ function checkWaveProgress() {
       zombiesInWave += 5; // More zombies each wave
       zombiesSpawned = 0;
       clearInterval(spawnInterval);
-      spawnInterval = setInterval(spawnZombie, Math.max(5000 - (currentWave - 1) * 500, 2000)); // Faster spawning each wave
+      spawnInterval = setInterval(spawnZombie, Math.max(5000 - (currentWave - 1) * 500, 2000) / gameSpeed); // Faster spawning each wave
     } else if (currentWave === TOTAL_WAVES && zombiesKilled >= zombiesInWave * TOTAL_WAVES) {
       // Victory!
       clearInterval(gameLoop);
@@ -280,7 +286,7 @@ function checkWaveProgress() {
 
 function updateProjectiles() {
   projectiles.forEach(proj => {
-    proj.x += 5;
+    proj.x += 5 * gameSpeed;
 
     // Check collision with zombies
     zombies.forEach(zombie => {
@@ -301,7 +307,7 @@ function updatePlants() {
   plants.forEach(plant => {
     const type = plantTypes[plant.type];
 
-    if (type.produces && now - plant.lastProduce >= type.productionRate) {
+    if (type.produces && now - plant.lastProduce >= type.productionRate / gameSpeed) {
       sunCount += type.produces;
       plant.lastProduce = now;
       updateSunCount();
@@ -315,7 +321,7 @@ function updatePlants() {
         z.x < plant.x * GRID_SIZE + type.range * GRID_SIZE
       );
 
-      if (zombie && now - plant.lastShot >= type.fireRate) {
+      if (zombie && now - plant.lastShot >= type.fireRate / gameSpeed) {
         if (type.range === 1) {
           // Melee plant
           zombie.health -= type.damage;
@@ -323,7 +329,7 @@ function updatePlants() {
             plant.eating = true;
             setTimeout(() => {
               plant.eating = false;
-            }, type.eatTime);
+            }, type.eatTime / gameSpeed);
           }
         } else {
           // Ranged plant
@@ -345,7 +351,7 @@ function updatePlants() {
 
 function updateZombies() {
   zombies.forEach(zombie => {
-    zombie.x -= zombie.slowed ? zombie.speed / 2 : zombie.speed;
+    zombie.x -= (zombie.slowed ? zombie.speed / 2 : zombie.speed) * gameSpeed;
 
     plants.forEach(plant => {
       if (Math.abs(zombie.y - plant.y) < 0.5 &&
@@ -386,6 +392,14 @@ function gameUpdate() {
   drawPlants();
   drawZombies();
   drawProjectiles();
+}
+
+function toggleSpeed() {
+  gameSpeed = gameSpeed === 1 ? 2 : 1;
+  clearInterval(gameLoop);
+  clearInterval(spawnInterval);
+  gameLoop = setInterval(gameUpdate, 1000 / 30 / gameSpeed);
+  spawnInterval = setInterval(spawnZombie, 5000 / gameSpeed);
 }
 
 // Start game
