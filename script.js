@@ -230,12 +230,8 @@ function drawZombies() {
 
 function drawProjectiles() {
   projectiles.forEach(proj => {
-    const plant = plants.find(p => p.x === Math.floor(proj.x / GRID_SIZE) && p.y === proj.y);
-    if (plant) {
-      ctx.fillStyle = plantTypes[plant.type].color;
-    } else {
-      ctx.fillStyle = 'green';
-    }
+    //color the projectile as per the plant color
+    ctx.fillStyle = plantTypes[proj.type].color;
     ctx.beginPath();
     ctx.arc(proj.x, proj.y * GRID_SIZE + GRID_SIZE / 2, 5, 0, Math.PI * 2);
     ctx.fill();
@@ -339,7 +335,8 @@ function updatePlants() {
               x: (plant.x + 1) * GRID_SIZE,
               y: plant.y,
               damage: type.damage,
-              slow: type.slow
+              slow: type.slow,
+              type: plant.type
             });
           }
         }
