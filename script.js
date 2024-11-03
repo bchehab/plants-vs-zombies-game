@@ -1,87 +1,15 @@
-// Audio setup
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-let isPlaying = false;
-
-// Super Mario Bros theme (simplified)
-const marioTheme = [
-  { note: 'E5', duration: 0.15 },
-  { note: 'E5', duration: 0.15 },
-  { note: 'R', duration: 0.15 },
-  { note: 'E5', duration: 0.15 },
-  { note: 'R', duration: 0.15 },
-  { note: 'C5', duration: 0.15 },
-  { note: 'E5', duration: 0.15 },
-  { note: 'R', duration: 0.15 },
-  { note: 'G5', duration: 0.2 },
-  { note: 'R', duration: 0.2 },
-  { note: 'G4', duration: 0.2 },
-  { note: 'R', duration: 0.2 },
-
-  { note: 'C5', duration: 0.15 },
-  { note: 'R', duration: 0.15 },
-  { note: 'G4', duration: 0.15 },
-  { note: 'R', duration: 0.15 },
-  { note: 'E4', duration: 0.15 },
-  { note: 'R', duration: 0.15 },
-  { note: 'A4', duration: 0.15 },
-  { note: 'R', duration: 0.1 },
-  { note: 'B4', duration: 0.15 },
-  { note: 'R', duration: 0.1 },
-  { note: 'Bb4', duration: 0.15 },
-  { note: 'A4', duration: 0.15 },
-];
-
-const noteFrequencies = {
-  'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
-  'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 'A5': 880.00, 'B5': 987.77,
-  'Bb4': 466.16
-};
-
-async function playNote(note, duration) {
-  if (note === 'R') { // Rest
-    await new Promise(resolve => setTimeout(resolve, duration * 1000));
-    return;
-  }
-
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-
-  oscillator.type = 'square';
-  oscillator.frequency.setValueAtTime(noteFrequencies[note], audioContext.currentTime);
-
-  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + duration);
-
-  await new Promise(resolve => setTimeout(resolve, duration * 1000));
-}
-
-async function playMarioTheme() {
-  while (isPlaying) {
-    for (const note of marioTheme) {
-      if (!isPlaying) break;
-      await playNote(note.note, note.duration);
-    }
-  }
-}
+const audioElement = document.getElementById('gameAudio');
 
 function toggleMusic() {
-  isPlaying = !isPlaying;
-  if (isPlaying) {
-    audioContext.resume();
-    playMarioTheme();
+  if (audioElement.paused) {
+    audioElement.play();
+  } else {
+    audioElement.pause();
   }
 }
 
 function updateVolume(value) {
-  if (gainNode) {
-    gainNode.gain.setValueAtTime(value, audioContext.currentTime);
-  }
+  audioElement.volume = value;
 }
 
 // Game state variables
