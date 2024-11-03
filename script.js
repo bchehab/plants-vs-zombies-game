@@ -1,4 +1,5 @@
 const audioElement = document.getElementById('gameAudio');
+const zombieImage = document.getElementById('zombieImage');
 
 function toggleMusic() {
   if (audioElement.paused) {
@@ -208,8 +209,8 @@ function drawPlants() {
 
 function drawZombies() {
   zombies.forEach(zombie => {
-    ctx.fillStyle = 'darkred';
-    ctx.fillRect(
+    ctx.drawImage(
+      zombieImage,
       zombie.x,
       zombie.y * GRID_SIZE + 10,
       GRID_SIZE - 20,
