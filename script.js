@@ -1,5 +1,7 @@
 const audioElement = document.getElementById('gameAudio');
 const zombieImage = document.getElementById('zombieImage');
+const helmetZombieImage = document.getElementById('helmetZombieImage');
+const bucketZombieImage = document.getElementById('bucketZombieImage');
 
 function toggleMusic() {
   if (audioElement.paused) {
@@ -209,8 +211,20 @@ function drawPlants() {
 
 function drawZombies() {
   zombies.forEach(zombie => {
+    let image;
+    switch (zombie.type) {
+      case 'helmet':
+        image = helmetZombieImage;
+        break;
+      case 'bucket':
+        image = bucketZombieImage;
+        break;
+      default:
+        image = zombieImage;
+    }
+
     ctx.drawImage(
-      zombieImage,
+      image,
       zombie.x,
       zombie.y * GRID_SIZE + 10,
       GRID_SIZE - 20,
@@ -247,13 +261,35 @@ function spawnZombie() {
   const health = 100 + (currentWave - 1) * 25; // Zombies get tougher each wave
   const speed = 0.5 + (currentWave - 1) * 0.1; // Zombies get faster each wave
 
+  let type;
+  if (currentWave === 1) {
+    type = Math.random() < 0.5 ? 'plain' : 'helmet';
+  } else {
+    const rand = Math.random();
+    if (rand < 0.33) {
+      type = 'plain';
+    } else if (rand < 0.66) {
+      type = 'helmet';
+    } else {
+      type = 'bucket';
+    }
+  }
+
+  let maxHealth = health;
+  if (type === 'helmet') {
+    maxHealth += 50;
+  } else if (type === 'bucket') {
+    maxHealth += 100;
+  }
+
   zombies.push({
     x: canvas.width,
     y: row,
-    health: health,
-    maxHealth: health,
+    health: maxHealth,
+    maxHealth: maxHealth,
     speed: speed,
-    slowed: false
+    slowed: false,
+    type: type
   });
 
   zombiesSpawned++;
