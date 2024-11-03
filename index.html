@@ -34,6 +34,11 @@
     Sun: <span id="sunCount">50</span>
     <div id="plantButtons"></div>
   </div>
+  <div class="wave-info">Wave: <span id="waveCounter">1</span>/5</div>
+  <div class="progress-container">
+    <div id="progressBar"
+      class="progress-bar"></div>
+  </div>
   <div class="audio-controls">
     <button onclick="toggleMusic()">Toggle Music</button>
     <input type="range"
@@ -41,7 +46,7 @@
       min="0"
       max="1"
       step="0.1"
-      value="0.5"
+      value="0.3"
       onchange="updateVolume(this.value)">
   </div>
   <canvas id="gameCanvas"
@@ -51,29 +56,56 @@
   <script>
     // Audio setup
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let oscillator = null;
-    let gainNode = null;
     let isPlaying = false;
 
-    // Simple 8-bit melody (frequencies and durations in seconds)
-    const melody = [
-      { freq: 262, duration: 0.2 }, // C4
-      { freq: 330, duration: 0.2 }, // E4
-      { freq: 392, duration: 0.2 }, // G4
-      { freq: 523, duration: 0.4 }, // C5
-      { freq: 392, duration: 0.2 }, // G4
-      { freq: 330, duration: 0.2 }, // E4
-      { freq: 262, duration: 0.4 }, // C4
+    // Super Mario Bros theme (simplified)
+    const marioTheme = [
+      { note: 'E5', duration: 0.15 },
+      { note: 'E5', duration: 0.15 },
+      { note: 'R', duration: 0.15 },
+      { note: 'E5', duration: 0.15 },
+      { note: 'R', duration: 0.15 },
+      { note: 'C5', duration: 0.15 },
+      { note: 'E5', duration: 0.15 },
+      { note: 'R', duration: 0.15 },
+      { note: 'G5', duration: 0.2 },
+      { note: 'R', duration: 0.2 },
+      { note: 'G4', duration: 0.2 },
+      { note: 'R', duration: 0.2 },
+
+      { note: 'C5', duration: 0.15 },
+      { note: 'R', duration: 0.15 },
+      { note: 'G4', duration: 0.15 },
+      { note: 'R', duration: 0.15 },
+      { note: 'E4', duration: 0.15 },
+      { note: 'R', duration: 0.15 },
+      { note: 'A4', duration: 0.15 },
+      { note: 'R', duration: 0.1 },
+      { note: 'B4', duration: 0.15 },
+      { note: 'R', duration: 0.1 },
+      { note: 'Bb4', duration: 0.15 },
+      { note: 'A4', duration: 0.15 },
     ];
 
-    function playNote(frequency, duration) {
+    const noteFrequencies = {
+      'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
+      'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 'A5': 880.00, 'B5': 987.77,
+      'Bb4': 466.16
+    };
+
+    async function playNote(note, duration) {
+      if (note === 'R') { // Rest
+        await new Promise(resolve => setTimeout(resolve, duration * 1000));
+        return;
+      }
+
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
-      oscillator.type = 'square'; // More "8-bit" sound
-      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(noteFrequencies[note], audioContext.currentTime);
 
-      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
 
       oscillator.connect(gainNode);
@@ -82,14 +114,14 @@
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + duration);
 
-      return new Promise(resolve => setTimeout(resolve, duration * 1000));
+      await new Promise(resolve => setTimeout(resolve, duration * 1000));
     }
 
-    async function playMelody() {
+    async function playMarioTheme() {
       while (isPlaying) {
-        for (const note of melody) {
+        for (const note of marioTheme) {
           if (!isPlaying) break;
-          await playNote(note.freq, note.duration);
+          await playNote(note.note, note.duration);
         }
       }
     }
@@ -98,7 +130,7 @@
       isPlaying = !isPlaying;
       if (isPlaying) {
         audioContext.resume();
-        playMelody();
+        playMarioTheme();
       }
     }
 
@@ -107,6 +139,13 @@
         gainNode.gain.setValueAtTime(value, audioContext.currentTime);
       }
     }
+
+    // Game state variables
+    const TOTAL_WAVES = 5;
+    let currentWave = 1;
+    let zombiesInWave = 10;
+    let zombiesSpawned = 0;
+    let zombiesKilled = 0;
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -210,6 +249,12 @@
       button.onclick = () => selectPlant(name, button);
       plantButtonsDiv.appendChild(button);
     });
+
+    function updateProgress() {
+      const progress = (zombiesKilled / (zombiesInWave * TOTAL_WAVES)) * 100;
+      document.getElementById('progressBar').style.width = `${progress}%`;
+      document.getElementById('waveCounter').textContent = currentWave;
+    }
 
     function selectPlant(plantName, buttonElement) {
       document.querySelectorAll('.plant-button').forEach(btn => btn.classList.remove('selected'));
@@ -320,15 +365,45 @@
     }
 
     function spawnZombie() {
+      if (zombiesSpawned >= zombiesInWave) {
+        return;
+      }
       const row = Math.floor(Math.random() * ROWS);
+      const health = 100 + (currentWave - 1) * 25; // Zombies get tougher each wave
+      const speed = 0.5 + (currentWave - 1) * 0.1; // Zombies get faster each wave
+
       zombies.push({
         x: canvas.width,
         y: row,
-        health: 100,
-        maxHealth: 100,
-        speed: 0.5,
+        health: health,
+        maxHealth: health,
+        speed: speed,
         slowed: false
       });
+
+      zombiesSpawned++;
+    }
+
+    function checkWaveProgress() {
+      if (zombiesKilled >= zombiesInWave && zombies.length === 0) {
+        if (currentWave < TOTAL_WAVES) {
+          currentWave++;
+          zombiesInWave += 5; // More zombies each wave
+          zombiesSpawned = 0;
+          clearInterval(spawnInterval);
+          spawnInterval = setInterval(spawnZombie, Math.max(5000 - (currentWave - 1) * 500, 2000)); // Faster spawning each wave
+        } else if (currentWave === TOTAL_WAVES && zombiesKilled >= zombiesInWave * TOTAL_WAVES) {
+          // Victory!
+          clearInterval(gameLoop);
+          clearInterval(spawnInterval);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = 'white';
+          ctx.font = '48px Arial';
+          ctx.fillText('VICTORY!', canvas.width / 2 - 100, canvas.height / 2);
+          isPlaying = false; // Stop the music
+        }
+      }
     }
 
     function updateProjectiles() {
@@ -398,25 +473,26 @@
 
     function updateZombies() {
       zombies.forEach(zombie => {
-        // Move zombie
         zombie.x -= zombie.slowed ? zombie.speed / 2 : zombie.speed;
 
-        // Check collision with plants
         plants.forEach(plant => {
           if (Math.abs(zombie.y - plant.y) < 0.5 &&
             Math.abs(zombie.x - (plant.x * GRID_SIZE)) < GRID_SIZE / 2) {
-            plant.health -= 0.5;
+            plant.health -= 0.5 * (1 + (currentWave - 1) * 0.2); // Zombies do more damage each wave
           }
         });
       });
 
-      // Remove dead zombies
+      // Count killed zombies
+      const previousLength = zombies.length;
       zombies = zombies.filter(zombie => zombie.health > 0 && zombie.x > -GRID_SIZE);
+      zombiesKilled += previousLength - zombies.length;
 
-      // Remove dead plants
       plants = plants.filter(plant => plant.health > 0);
 
-      // Check game over
+      updateProgress();
+      checkWaveProgress();
+
       if (zombies.some(zombie => zombie.x <= 0)) {
         clearInterval(gameLoop);
         clearInterval(spawnInterval);
@@ -425,7 +501,7 @@
         ctx.fillStyle = 'white';
         ctx.font = '48px Arial';
         ctx.fillText('GAME OVER', canvas.width / 2 - 100, canvas.height / 2);
-        isPlaying = false; // Stop the music
+        isPlaying = false;
       }
     }
 
