@@ -1,0 +1,23 @@
+canvas {
+	border: 1px solid black;
+}
+
+.controls {
+	margin: 10px 0;
+	padding: 10px;
+	background: #f0f0f0;
+}
+
+.plant-button {
+	margin: 5px;
+	padding: 5px;
+	cursor: pointer;
+}
+
+.selected {
+	background: #90ee90;
+}
+
+.audio-controls {
+	margin: 10px 0;
+}
