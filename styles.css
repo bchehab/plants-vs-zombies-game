@@ -21,7 +21,3 @@ canvas {
 .audio-controls {
 	margin: 10px 0;
 }
-
-audio {
-  display: none;
-}
