@@ -1,3 +1,4 @@
+// Existing audio setup
 const audioElement = document.getElementById('gameAudio');
 const zombieImage = document.getElementById('zombieImage');
 const helmetZombieImage = document.getElementById('helmetZombieImage');
@@ -22,11 +23,12 @@ let zombiesInWave = 10;
 let zombiesSpawned = 0;
 let zombiesKilled = 0;
 
+// Canvas and grid setup
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const GRID_SIZE = 80;
 const ROWS = 5;
-const COLS = 8;
+const COLS = 9;
+let GRID_SIZE; // Will be calculated in resizeCanvas
 
 let sunCount = 50;
 let selectedPlant = null;
@@ -116,7 +118,34 @@ const plantTypes = {
   }
 };
 
-// Initialize plant buttons
+// NEW: Resize handling
+function resizeCanvas() {
+  const container = canvas.parentElement;
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+  GRID_SIZE = Math.min(canvas.width / COLS, canvas.height / ROWS);
+
+  // Update existing elements positions if any exist
+  if (plants) {
+    plants.forEach(plant => {
+      plant.screenX = plant.x * GRID_SIZE;
+      plant.screenY = plant.y * GRID_SIZE;
+    });
+  }
+
+  if (zombies) {
+    zombies.forEach(zombie => {
+      zombie.screenY = zombie.y * GRID_SIZE;
+    });
+  }
+}
+
+// NEW: Add resize listener
+window.addEventListener('resize', resizeCanvas);
+// NEW: Initial resize
+resizeCanvas();
+
+// Keep your existing plant buttons initialization
 const plantButtonsDiv = document.getElementById('plantButtons');
 Object.entries(plantTypes).forEach(([name, data]) => {
   const button = document.createElement('button');
@@ -142,6 +171,93 @@ function selectPlant(plantName, buttonElement) {
   }
 }
 
+function updateSunCount() {
+  document.getElementById('sunCount').textContent = sunCount;
+}
+
+function drawGrid() {
+  ctx.strokeStyle = '#ccc';
+  for (let i = 0; i <= COLS; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * GRID_SIZE, 0);
+    ctx.lineTo(i * GRID_SIZE, ROWS * GRID_SIZE);
+    ctx.stroke();
+  }
+  for (let i = 0; i <= ROWS; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, i * GRID_SIZE);
+    ctx.lineTo(COLS * GRID_SIZE, i * GRID_SIZE);
+    ctx.stroke();
+  }
+}
+
+function drawPlants() {
+  plants.forEach(plant => {
+    ctx.fillStyle = plantTypes[plant.type].color;
+    ctx.fillRect(
+      plant.x * GRID_SIZE + GRID_SIZE * 0.1,
+      plant.y * GRID_SIZE + GRID_SIZE * 0.1,
+      GRID_SIZE * 0.8,
+      GRID_SIZE * 0.8
+    );
+
+    // Health bar
+    const healthPercent = plant.health / plantTypes[plant.type].health;
+    ctx.fillStyle = `rgb(${255 * (1 - healthPercent)}, ${255 * healthPercent}, 0)`;
+    ctx.fillRect(
+      plant.x * GRID_SIZE + GRID_SIZE * 0.1,
+      plant.y * GRID_SIZE + GRID_SIZE * 0.05,
+      GRID_SIZE * 0.8 * healthPercent,
+      GRID_SIZE * 0.05
+    );
+  });
+}
+
+function drawZombies() {
+  zombies.forEach(zombie => {
+    let image;
+    switch (zombie.type) {
+      case 'helmet':
+        image = helmetZombieImage;
+        break;
+      case 'bucket':
+        image = bucketZombieImage;
+        break;
+      default:
+        image = zombieImage;
+    }
+
+    ctx.drawImage(
+      image,
+      zombie.x,
+      zombie.y * GRID_SIZE + GRID_SIZE * 0.1,
+      GRID_SIZE * 0.8,
+      GRID_SIZE * 0.8
+    );
+
+    // Health bar
+    const healthPercent = zombie.health / zombie.maxHealth;
+    ctx.fillStyle = `rgb(${255 * (1 - healthPercent)}, ${255 * healthPercent}, 0)`;
+    ctx.fillRect(
+      zombie.x,
+      zombie.y * GRID_SIZE + GRID_SIZE * 0.05,
+      GRID_SIZE * 0.8 * healthPercent,
+      GRID_SIZE * 0.05
+    );
+  });
+}
+
+function drawProjectiles() {
+  projectiles.forEach(proj => {
+    //color the projectile as per the plant color
+    ctx.fillStyle = plantTypes[proj.type].color;
+    ctx.beginPath();
+    ctx.arc(proj.x, proj.y * GRID_SIZE + GRID_SIZE / 2, GRID_SIZE * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// MODIFIED: Update click handler
 canvas.onclick = (e) => {
   if (!selectedPlant) return;
 
@@ -167,99 +283,14 @@ canvas.onclick = (e) => {
   }
 };
 
-function updateSunCount() {
-  document.getElementById('sunCount').textContent = sunCount;
-}
-
-function drawGrid() {
-  ctx.strokeStyle = '#ccc';
-  for (let i = 0; i <= COLS; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * GRID_SIZE, 0);
-    ctx.lineTo(i * GRID_SIZE, ROWS * GRID_SIZE);
-    ctx.stroke();
-  }
-  for (let i = 0; i <= ROWS; i++) {
-    ctx.beginPath();
-    ctx.moveTo(0, i * GRID_SIZE);
-    ctx.lineTo(COLS * GRID_SIZE, i * GRID_SIZE);
-    ctx.stroke();
-  }
-}
-
-function drawPlants() {
-  plants.forEach(plant => {
-    ctx.fillStyle = plantTypes[plant.type].color;
-    ctx.fillRect(
-      plant.x * GRID_SIZE + 10,
-      plant.y * GRID_SIZE + 10,
-      GRID_SIZE - 20,
-      GRID_SIZE - 20
-    );
-
-    // Health bar
-    const healthPercent = plant.health / plantTypes[plant.type].health;
-    ctx.fillStyle = `rgb(${255 * (1 - healthPercent)}, ${255 * healthPercent}, 0)`;
-    ctx.fillRect(
-      plant.x * GRID_SIZE + 10,
-      plant.y * GRID_SIZE + 5,
-      (GRID_SIZE - 20) * healthPercent,
-      3
-    );
-  });
-}
-
-function drawZombies() {
-  zombies.forEach(zombie => {
-    let image;
-    switch (zombie.type) {
-      case 'helmet':
-        image = helmetZombieImage;
-        break;
-      case 'bucket':
-        image = bucketZombieImage;
-        break;
-      default:
-        image = zombieImage;
-    }
-
-    ctx.drawImage(
-      image,
-      zombie.x,
-      zombie.y * GRID_SIZE + 10,
-      GRID_SIZE - 20,
-      GRID_SIZE - 20
-    );
-
-    // Health bar
-    const healthPercent = zombie.health / zombie.maxHealth;
-    ctx.fillStyle = `rgb(${255 * (1 - healthPercent)}, ${255 * healthPercent}, 0)`;
-    ctx.fillRect(
-      zombie.x,
-      zombie.y * GRID_SIZE + 5,
-      (GRID_SIZE - 20) * healthPercent,
-      3
-    );
-  });
-}
-
-function drawProjectiles() {
-  projectiles.forEach(proj => {
-    //color the projectile as per the plant color
-    ctx.fillStyle = plantTypes[proj.type].color;
-    ctx.beginPath();
-    ctx.arc(proj.x, proj.y * GRID_SIZE + GRID_SIZE / 2, 5, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-
+// MODIFIED: Update zombie spawning
 function spawnZombie() {
   if (zombiesSpawned >= zombiesInWave) {
     return;
   }
   const row = Math.floor(Math.random() * ROWS);
-  const health = 100 + (currentWave - 1) * 25; // Zombies get tougher each wave
-  const speed = 0.5 + (currentWave - 1) * 0.1; // Zombies get faster each wave
+  const health = 100 + (currentWave - 1) * 25;
+  const speed = (0.5 + (currentWave - 1) * 0.1) * (GRID_SIZE / 80); // Scale speed based on grid size
 
   let type;
   if (currentWave === 1) {
