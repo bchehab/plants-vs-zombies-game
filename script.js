@@ -24,9 +24,9 @@ let zombiesKilled = 0;
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const GRID_SIZE = 80;
-const ROWS = 5;
-const COLS = 8;
+let GRID_SIZE = Math.min(window.innerWidth / 8, window.innerHeight / 5);
+let ROWS = Math.floor(window.innerHeight / GRID_SIZE);
+let COLS = Math.floor(window.innerWidth / GRID_SIZE);
 
 let sunCount = 50;
 let selectedPlant = null;
@@ -477,6 +477,15 @@ function showRestartButton() {
   restartButton.onclick = restartGame;
   document.body.appendChild(restartButton);
 }
+
+window.addEventListener('resize', function() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  GRID_SIZE = Math.min(window.innerWidth / 8, window.innerHeight / 5);
+  ROWS = Math.floor(window.innerHeight / GRID_SIZE);
+  COLS = Math.floor(window.innerWidth / GRID_SIZE);
+  drawGrid();
+});
 
 // Start game
 gameLoop = setInterval(gameUpdate, 1000 / 30);
