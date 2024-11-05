@@ -1,14 +1,31 @@
-// Existing audio setup
 const audioElement = document.getElementById('gameAudio');
+let isPlaying = false;
+
 const zombieImage = document.getElementById('zombieImage');
 const helmetZombieImage = document.getElementById('helmetZombieImage');
 const bucketZombieImage = document.getElementById('bucketZombieImage');
 
 function toggleMusic() {
-  if (audioElement.paused) {
-    audioElement.play();
+  if (!isPlaying) {
+    audioElement.volume = 0.3; // Set initial volume
+    audioElement.play()
+      .then(() => {
+        isPlaying = true;
+        document.querySelector('.audio-controls button').textContent = 'Mute Music';
+      })
+      .catch(err => {
+        console.log('Playback failed:', err);
+      });
   } else {
     audioElement.pause();
+    isPlaying = false;
+    document.querySelector('.audio-controls button').textContent = 'Play Music';
+  }
+}
+
+function tryPlayAudio() {
+  if (!isPlaying) {
+    toggleMusic();
   }
 }
 
@@ -512,3 +529,6 @@ function showRestartButton() {
 // Start game
 gameLoop = setInterval(gameUpdate, 1000 / 30);
 spawnInterval = setInterval(spawnZombie, 5000);
+
+document.addEventListener('click', tryPlayAudio, { once: true });
+document.addEventListener('keypress', tryPlayAudio, { once: true });
