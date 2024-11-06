@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Stem -->
+  <path d="M45 85 C45 85, 50 70, 50 60" stroke="#2D5A27" stroke-width="4" fill="none"/>
+  <path d="M55 85 C55 85, 50 70, 50 60" stroke="#2D5A27" stroke-width="4" fill="none"/>
+  
+  <!-- Leaves -->
+  <path d="M30 75 C20 70, 20 60, 30 55 C40 60, 40 70, 30 75" fill="#3A7A34"/>
+  <path d="M70 75 C80 70, 80 60, 70 55 C60 60, 60 70, 70 75" fill="#3A7A34"/>
+  
+  <!-- Head -->
+  <circle cx="50" cy="45" r="25" fill="#4CAF50"/>
+  
+  <!-- Mouth/Shooter -->
+  <path d="M50 45 L80 45 Q90 45, 90 35 Q90 25, 80 25 L50 25 Q40 25, 40 35 Q40 45, 50 45" fill="#2E7D32"/>
+  
+  <!-- Eyes -->
+  <circle cx="45" cy="35" r="6" fill="white"/>
+  <circle cx="45" cy="35" r="3" fill="black"/>
+  <circle cx="44" cy="34" r="1" fill="white"/>
+  
+  <!-- Eye highlight -->
+  <circle cx="55" cy="35" r="4" fill="white"/>
+  <circle cx="55" cy="35" r="2" fill="black"/>
+  <circle cx="54" cy="34" r="1" fill="white"/>
+</svg>

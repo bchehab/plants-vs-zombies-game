@@ -56,6 +56,10 @@ let gameLoop;
 let spawnInterval;
 let gameSpeed = 1;
 
+// Add at the beginning with your other variables
+const peashooterImage = new Image();
+peashooterImage.src = 'peashooter.svg';
+
 const plantTypes = {
   Peashooter: {
     cost: 100,
@@ -210,13 +214,38 @@ function drawGrid() {
 
 function drawPlants() {
   plants.forEach(plant => {
-    ctx.fillStyle = plantTypes[plant.type].color;
-    ctx.fillRect(
-      plant.x * GRID_SIZE + GRID_SIZE * 0.1,
-      plant.y * GRID_SIZE + GRID_SIZE * 0.1,
-      GRID_SIZE * 0.8,
-      GRID_SIZE * 0.8
-    );
+    if (plant.type === 'Peashooter') {
+      // Save the current context state
+      ctx.save();
+
+      // Move to the center of the grid cell
+      ctx.translate(
+        plant.x * GRID_SIZE + GRID_SIZE / 2,
+        plant.y * GRID_SIZE + GRID_SIZE / 2
+      );
+
+      // Draw the peashooter
+      const size = GRID_SIZE * 0.8;
+      ctx.drawImage(
+        peashooterImage,
+        -size / 2, // Center the image
+        -size / 2,
+        size,
+        size
+      );
+
+      // Restore the context state
+      ctx.restore();
+    } else {
+      // Draw other plants as before
+      ctx.fillStyle = plantTypes[plant.type].color;
+      ctx.fillRect(
+        plant.x * GRID_SIZE + GRID_SIZE * 0.1,
+        plant.y * GRID_SIZE + GRID_SIZE * 0.1,
+        GRID_SIZE * 0.8,
+        GRID_SIZE * 0.8
+      );
+    }
 
     // Health bar
     const healthPercent = plant.health / plantTypes[plant.type].health;
@@ -286,15 +315,18 @@ canvas.onclick = (e) => {
     const cost = plantTypes[selectedPlant].cost;
     if (sunCount >= cost && !plants.some(p => p.x === x && p.y === y)) {
       sunCount -= cost;
-      plants.push({
+      const plant = {
         type: selectedPlant,
         x: x,
         y: y,
         health: plantTypes[selectedPlant].health,
         lastShot: 0,
         lastProduce: 0,
-        eating: false
-      });
+        eating: false,
+        id: Date.now() + Math.random() // Unique ID for animation tracking
+      };
+      plants.push(plant);
+      // plantAnimations.set(plant.id, { isShooting: false });
       updateSunCount();
     }
   }
@@ -403,6 +435,29 @@ function updatePlants() {
       );
 
       if (zombie && now - plant.lastShot >= type.fireRate / gameSpeed) {
+        if (type.range > 1) {
+          // Ranged plant
+          const shots = type.shots || 1;
+          for (let i = 0; i < shots; i++) {
+            projectiles.push({
+              x: (plant.x + 1) * GRID_SIZE,
+              y: plant.y,
+              damage: type.damage,
+              slow: type.slow,
+              type: plant.type
+            });
+          }
+
+          // Add animation trigger for Peashooter
+          // if (plant.type === 'Peashooter') {
+          //   const animation = plantAnimations.get(plant.id);
+          //   animation.isShooting = true;
+          //   setTimeout(() => {
+          //     animation.isShooting = false;
+          //   }, 100); // Reset animation after 100ms
+          // }
+        }
+
         if (type.range === 1) {
           // Melee plant
           zombie.health -= type.damage;
@@ -505,6 +560,8 @@ function restartGame() {
   clearInterval(spawnInterval);
   gameLoop = setInterval(gameUpdate, 1000 / 30);
   spawnInterval = setInterval(spawnZombie, 5000);
+
+  // plantAnimations.clear(); // Clear animation states
 
   const restartButton = document.getElementById('restartButton');
   if (restartButton) {
