@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Stem -->
+  <path d="M45 85 C45 85, 50 70, 50 60" stroke="#1B4D4D" stroke-width="4" fill="none"/>
+  <path d="M55 85 C55 85, 50 70, 50 60" stroke="#1B4D4D" stroke-width="4" fill="none"/>
+  
+  <!-- Leaves -->
+  <path d="M30 75 C20 70, 20 60, 30 55 C40 60, 40 70, 30 75" fill="#20615E"/>
+  <path d="M70 75 C80 70, 80 60, 70 55 C60 60, 60 70, 70 75" fill="#20615E"/>
+  
+  <!-- Head -->
+  <circle cx="50" cy="45" r="25" fill="#87CEEB"/>
+  
+  <!-- Mouth/Shooter -->
+  <path d="M50 45 L80 45 Q90 45, 90 35 Q90 25, 80 25 L50 25 Q40 25, 40 35 Q40 45, 50 45" fill="#ADD8E6"/>
+  
+  <!-- Ice crystals on shooter -->
+  <path d="M60 25 L63 20 L66 25" fill="none" stroke="#E0FFFF" stroke-width="2"/>
+  <path d="M70 25 L73 20 L76 25" fill="none" stroke="#E0FFFF" stroke-width="2"/>
+  <path d="M65 45 L68 50 L71 45" fill="none" stroke="#E0FFFF" stroke-width="2"/>
+  <path d="M75 45 L78 50 L81 45" fill="none" stroke="#E0FFFF" stroke-width="2"/>
+  
+  <!-- Eyes -->
+  <circle cx="45" cy="35" r="6" fill="white"/>
+  <circle cx="45" cy="35" r="3" fill="#1E90FF"/>
+  <circle cx="44" cy="34" r="1" fill="white"/>
+  
+  <circle cx="55" cy="35" r="4" fill="white"/>
+  <circle cx="55" cy="35" r="2" fill="#1E90FF"/>
+  <circle cx="54" cy="34" r="1" fill="white"/>
+  
+  <!-- Frost details -->
+  <path d="M35 30 L32 25 L35 27" fill="none" stroke="#E0FFFF" stroke-width="1"/>
+  <path d="M65 30 L68 25 L65 27" fill="none" stroke="#E0FFFF" stroke-width="1"/>
+  <path d="M40 55 L37 60 L40 58" fill="none" stroke="#E0FFFF" stroke-width="1"/>
+  <path d="M60 55 L63 60 L60 58" fill="none" stroke="#E0FFFF" stroke-width="1"/>
+  
+  <!-- Ice crystals crown -->
+  <path d="M45 20 L42 15 L45 17 L48 15 L45 20" fill="#E0FFFF"/>
+  <path d="M55 20 L52 15 L55 17 L58 15 L55 20" fill="#E0FFFF"/>
+  
+  <!-- Cold effect marks -->
+  <circle cx="30" cy="40" r="1" fill="#E0FFFF"/>
+  <circle cx="35" cy="50" r="1" fill="#E0FFFF"/>
+  <circle cx="70" cy="40" r="1" fill="#E0FFFF"/>
+  <circle cx="65" cy="50" r="1" fill="#E0FFFF"/>
+</svg>

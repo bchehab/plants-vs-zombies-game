@@ -60,6 +60,18 @@ let gameSpeed = 1;
 const peashooterImage = new Image();
 peashooterImage.src = 'peashooter.svg';
 
+//ice-peashooter.svg
+const icePeashooterImage = new Image();
+icePeashooterImage.src = 'ice-peashooter.svg';
+
+//sunflowerImage
+const sunflowerImage = new Image();
+sunflowerImage.src = 'sunflower.svg';
+
+//repeater.svg
+const repeaterImage = new Image();
+repeaterImage.src = 'repeater.svg';
+
 const plantTypes = {
   Peashooter: {
     cost: 100,
@@ -236,7 +248,77 @@ function drawPlants() {
 
       // Restore the context state
       ctx.restore();
-    } else {
+    }
+    else if (plant.type === 'Sunflower') {
+      // Save the current context state
+      ctx.save();
+
+      // Move to the center of the grid cell
+      ctx.translate(
+        plant.x * GRID_SIZE + GRID_SIZE / 2,
+        plant.y * GRID_SIZE + GRID_SIZE / 2
+      );
+
+      // Draw the sunflower
+      const size = GRID_SIZE * 0.8;
+      ctx.drawImage(
+        sunflowerImage,
+        -size / 2, // Center the image
+        -size / 2,
+        size,
+        size
+      );
+
+      // Restore the context state
+      ctx.restore();
+    }
+    else if (plant.type === 'SnowPea') {
+      // Save the current context state
+      ctx.save();
+
+      // Move to the center of the grid cell
+      ctx.translate(
+        plant.x * GRID_SIZE + GRID_SIZE / 2,
+        plant.y * GRID_SIZE + GRID_SIZE / 2
+      );
+
+      // Draw the ice peashooter
+      const size = GRID_SIZE * 0.8;
+      ctx.drawImage(
+        icePeashooterImage,
+        -size / 2, // Center the image
+        -size / 2,
+        size,
+        size
+      );
+
+      // Restore the context state
+      ctx.restore();
+    }
+    else if (plant.type === 'Repeater') {
+      // Save the current context state
+      ctx.save();
+
+      // Move to the center of the grid cell
+      ctx.translate(
+        plant.x * GRID_SIZE + GRID_SIZE / 2,
+        plant.y * GRID_SIZE + GRID_SIZE / 2
+      );
+
+      // Draw the repeater
+      const size = GRID_SIZE * 0.8;
+      ctx.drawImage(
+        repeaterImage,
+        -size / 2, // Center the image
+        -size / 2,
+        size,
+        size
+      );
+
+      // Restore the context state
+      ctx.restore();
+    }
+    else {
       // Draw other plants as before
       ctx.fillStyle = plantTypes[plant.type].color;
       ctx.fillRect(

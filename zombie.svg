@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Legs -->
+  <path d="M35 95 L45 75 L55 75 L65 95" fill="#4A4A4A"/>
+  <!-- Torn pants -->
+  <path d="M35 95 L45 75 L55 75 L65 95 L60 95 L52 80 L48 80 L40 95 Z" fill="#264C73"/>
+  
+  <!-- Body -->
+  <path d="M45 75 C45 65, 45 60, 48 50 C52 40, 55 45, 55 75" fill="#4A4A4A"/>
+  <!-- Torn shirt -->
+  <path d="M45 75 C45 65, 45 60, 48 50 C52 40, 55 45, 55 75" fill="#533622"/>
+  <path d="M46 70 L48 65 L50 70" fill="none" stroke="#694529" stroke-width="1"/>
+  <path d="M50 60 L52 55 L54 60" fill="none" stroke="#694529" stroke-width="1"/>
+  
+  <!-- Arms -->
+  <!-- Right arm hanging -->
+  <path d="M55 50 C60 60, 65 70, 63 80" fill="#4A4A4A"/>
+  <path d="M55 50 C60 60, 65 70, 63 80" fill="#533622"/>
+  <!-- Left arm reaching -->
+  <path d="M45 50 C35 45, 30 40, 25 45" fill="#4A4A4A"/>
+  <path d="M45 50 C35 45, 30 40, 25 45" fill="#533622"/>
+  
+  <!-- Hands -->
+  <path d="M25 45 C23 45, 22 46, 20 44" stroke="#8B8989" fill="#8B8989"/>
+  <path d="M63 80 C64 82, 65 83, 63 85" stroke="#8B8989" fill="#8B8989"/>
+  
+  <!-- Neck -->
+  <rect x="47" y="40" width="6" height="10" fill="#8B8989"/>
+  
+  <!-- Head -->
+  <ellipse cx="50" cy="35" rx="12" ry="15" fill="#8B8989"/>
+  
+  <!-- Hair tufts -->
+  <path d="M45 22 C42 20, 43 18, 45 20" stroke="black" fill="black"/>
+  <path d="M50 20 C48 18, 49 16, 51 18" stroke="black" fill="black"/>
+  <path d="M55 22 C53 20, 54 18, 56 20" stroke="black" fill="black"/>
+  
+  <!-- Face -->
+  <!-- Sunken eyes -->
+  <ellipse cx="45" cy="33" rx="3" ry="4" fill="#4A4A4A"/>
+  <ellipse cx="55" cy="33" rx="3" ry="4" fill="#4A4A4A"/>
+  <!-- Red pupils -->
+  <circle cx="45" cy="33" r="1" fill="#A11"/>
+  <circle cx="55" cy="33" r="1" fill="#A11"/>
+  
+  <!-- Mouth -->
+  <path d="M44 40 C47 43, 53 43, 56 40" fill="none" stroke="#4A4A4A" stroke-width="2"/>
+  
+  <!-- Teeth -->
+  <rect x="46" y="39" width="2" height="3" fill="white"/>
+  <rect x="52" y="39" width="2" height="3" fill="white"/>
+  
+  <!-- Head damage/cracks -->
+  <path d="M40 30 C38 28, 39 26, 41 28" fill="none" stroke="#4A4A4A" stroke-width="0.5"/>
+  <path d="M60 35 C58 33, 59 31, 61 33" fill="none" stroke="#4A4A4A" stroke-width="0.5"/>
+</svg>
